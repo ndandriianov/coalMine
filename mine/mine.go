@@ -4,37 +4,44 @@ import (
 	"coalMine/mine/miners"
 	"coalMine/mine/resources"
 	"context"
-	"fmt"
 	"sync"
 )
 
 type Mine struct {
-	miners  []miners.Miner
-	balance resources.Coal
-	Group   sync.WaitGroup
+	miners    []miners.Miner
+	Balance   resources.Coal
+	Producers *sync.WaitGroup
+	Consumers *sync.WaitGroup
 }
 
 func NewMine() Mine {
+	producers := sync.WaitGroup{}
+	consumers := sync.WaitGroup{}
 	return Mine{
-		miners:  make([]miners.Miner, 10),
-		balance: 0,
+		miners:    make([]miners.Miner, 10),
+		Balance:   0,
+		Producers: &producers,
+		Consumers: &consumers,
 	}
 }
 
 func (m *Mine) Run(ctx context.Context) {
-	coalChan := RunPassiveIncome(ctx)
+	coalChan := make(chan resources.Coal)
 
-	m.Group.Add(1)
+	m.Producers.Add(1)
+	go PassiveIncome(ctx, m.Producers, coalChan)
+
+	m.Consumers.Add(1)
 	go func() {
-		defer m.Group.Done()
-		for {
-			select {
-			case <-ctx.Done():
-				fmt.Println("mine ended its work! coal extracted:", m.balance)
-				return
-			case coal := <-coalChan:
-				m.balance += coal
-			}
+		defer m.Consumers.Done()
+
+		for coal := range coalChan {
+			m.Balance += coal
 		}
+	}()
+
+	go func() {
+		m.Producers.Wait()
+		close(coalChan)
 	}()
 }

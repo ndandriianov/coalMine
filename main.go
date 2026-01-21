@@ -3,6 +3,7 @@ package main
 import (
 	m "coalMine/mine"
 	"context"
+	"fmt"
 	"time"
 )
 
@@ -15,5 +16,8 @@ func main() {
 	time.Sleep(2 * time.Second)
 	myCancel()
 
-	theMine.Group.Wait()
+	theMine.Producers.Wait()
+	theMine.Consumers.Wait()
+
+	fmt.Println("coal extracted:", theMine.Balance)
 }

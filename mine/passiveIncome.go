@@ -4,24 +4,28 @@ import (
 	"coalMine/mine/resources"
 	"context"
 	"fmt"
+	"sync"
 	"time"
 )
 
-func RunPassiveIncome(ctx context.Context) <-chan resources.Coal {
-	ch := make(chan resources.Coal)
+func PassiveIncome(ctx context.Context, wg *sync.WaitGroup, ch chan resources.Coal) {
+	defer wg.Done()
 
-	go func() {
-		for {
+	ticker := time.NewTicker(1 * time.Second)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ctx.Done():
+			fmt.Println("PassiveIncome finished")
+			return
+		case <-ticker.C:
 			select {
 			case <-ctx.Done():
 				fmt.Println("PassiveIncome finished")
 				return
-			default:
-				time.Sleep(1 * time.Second)
-				ch <- 1
+			case ch <- 1:
 			}
 		}
-	}()
-
-	return ch
+	}
 }
