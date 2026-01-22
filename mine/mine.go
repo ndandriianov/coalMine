@@ -8,39 +8,39 @@ import (
 	"sync"
 )
 
-type Mine struct {
+type Service struct {
 	miners    []miners.Miner
 	Balance   resources.Coal
-	Producers *sync.WaitGroup
-	Consumers *sync.WaitGroup
+	producers *sync.WaitGroup
+	consumers *sync.WaitGroup
 	ctx       context.Context
 	cancel    context.CancelFunc
 }
 
-func NewMine() Mine {
+func NewMine() *Service {
 	producers := sync.WaitGroup{}
 	consumers := sync.WaitGroup{}
 	ctx, cancel := context.WithCancel(context.Background())
 
-	return Mine{
+	return &Service{
 		miners:    make([]miners.Miner, 10),
 		Balance:   0,
-		Producers: &producers,
-		Consumers: &consumers,
+		producers: &producers,
+		consumers: &consumers,
 		ctx:       ctx,
 		cancel:    cancel,
 	}
 }
 
-func (m *Mine) Run() {
+func (m *Service) Start() {
 	coalChan := make(chan resources.Coal)
 
-	m.Producers.Add(1)
-	go PassiveIncome(m.ctx, m.Producers, coalChan)
+	m.producers.Add(1)
+	go PassiveIncome(m.ctx, m.producers, coalChan)
 
-	m.Consumers.Add(1)
+	m.consumers.Add(1)
 	go func() {
-		defer m.Consumers.Done()
+		defer m.consumers.Done()
 
 		for coal := range coalChan {
 			m.Balance += coal
@@ -48,17 +48,17 @@ func (m *Mine) Run() {
 	}()
 
 	go func() {
-		m.Producers.Wait()
+		m.producers.Wait()
 		close(coalChan)
 	}()
 }
 
-func (m *Mine) Stop() {
+func (m *Service) Stop() {
 	m.cancel()
 	fmt.Println("Stopping the mine")
 
-	m.Producers.Wait()
-	m.Consumers.Wait()
+	m.producers.Wait()
+	m.consumers.Wait()
 
-	fmt.Println("Mine stopped")
+	fmt.Println("Service stopped")
 }

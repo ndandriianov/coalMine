@@ -47,7 +47,7 @@
     // Coal — уголь
     // MinerInfo — информация о шахтёре: количество энергии, класс, и т.д.
     type Miner interface {
-	    Run(ctx context.Context) <-chan Coal
+	    Start(ctx context.Context) <-chan Coal
 	    Info() MinerInfo
     }
     ```
