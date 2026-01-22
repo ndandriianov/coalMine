@@ -15,16 +15,29 @@ type Service struct {
 	consumers *sync.WaitGroup
 	ctx       context.Context
 	cancel    context.CancelFunc
+	isRunning bool
+	runMtx    sync.Mutex
 }
 
 func NewMine() *Service {
 	return &Service{
-		miners:  make([]miners.Miner, 10),
-		Balance: 0,
+		miners:    make([]miners.Miner, 10),
+		Balance:   0,
+		isRunning: false,
 	}
 }
 
 func (m *Service) Start() {
+	m.runMtx.Lock()
+	if m.isRunning {
+		fmt.Println("Mine is already running")
+		m.runMtx.Unlock()
+		return
+	}
+
+	m.isRunning = true
+	m.runMtx.Unlock()
+
 	m.ctx, m.cancel = context.WithCancel(context.Background())
 	m.producers = &sync.WaitGroup{}
 	m.consumers = &sync.WaitGroup{}
@@ -50,6 +63,14 @@ func (m *Service) Start() {
 }
 
 func (m *Service) Stop() {
+	m.runMtx.Lock()
+	defer m.runMtx.Unlock()
+
+	if !m.isRunning {
+		fmt.Println("Mine is already not running")
+		return
+	}
+
 	m.cancel()
 	fmt.Println("Stopping the mine")
 
@@ -57,4 +78,5 @@ func (m *Service) Stop() {
 	m.consumers.Wait()
 
 	fmt.Println("Service stopped")
+	m.isRunning = false
 }
