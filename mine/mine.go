@@ -18,21 +18,17 @@ type Service struct {
 }
 
 func NewMine() *Service {
-	producers := sync.WaitGroup{}
-	consumers := sync.WaitGroup{}
-	ctx, cancel := context.WithCancel(context.Background())
-
 	return &Service{
-		miners:    make([]miners.Miner, 10),
-		Balance:   0,
-		producers: &producers,
-		consumers: &consumers,
-		ctx:       ctx,
-		cancel:    cancel,
+		miners:  make([]miners.Miner, 10),
+		Balance: 0,
 	}
 }
 
 func (m *Service) Start() {
+	m.ctx, m.cancel = context.WithCancel(context.Background())
+	m.producers = &sync.WaitGroup{}
+	m.consumers = &sync.WaitGroup{}
+
 	coalChan := make(chan resources.Coal)
 
 	m.producers.Add(1)
