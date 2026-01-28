@@ -45,29 +45,15 @@ func (m *SmallMiner) Run(group *sync.WaitGroup) {
 	m.state = Working
 	m.stateMtx.Unlock()
 
-	//ticker := time.NewTicker(3 * time.Second)
+	ticker := time.NewTicker(3 * time.Second)
+	defer ticker.Stop()
 
 	for {
 		select {
 		case <-m.ctx.Done():
 			fmt.Println("small miner was forced to finish his work")
 			return
-		//case <-ticker.C:
-		//	if m.energy == 0 {
-		//		fmt.Println("small miner finished his work")
-		//		return
-		//	}
-		//	m.infoMtx.Lock()
-		//
-		//	coalExtracted := resources.Coal(1)
-		//	ch <- coalExtracted
-		//	m.coalExtracted += coalExtracted
-		//	m.energy--
-		//
-		//	m.infoMtx.Unlock()
-		//
-		//	fmt.Println("small miner extracted coal")
-		default:
+		case <-ticker.C:
 			m.stateMtx.Lock()
 			for m.state == Pause {
 				m.cond.Wait()
@@ -75,7 +61,6 @@ func (m *SmallMiner) Run(group *sync.WaitGroup) {
 			m.stateMtx.Unlock()
 
 			fmt.Println("small miner working")
-			time.Sleep(3 * time.Second)
 		}
 	}
 }
