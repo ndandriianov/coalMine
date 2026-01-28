@@ -20,63 +20,87 @@ type Service struct {
 }
 
 func NewMine() *Service {
+	mineContext, mineCancel := context.WithCancel(context.Background())
+
 	return &Service{
-		miners:    make([]miners.Miner, 10),
-		Balance:   0,
+		miners:  make([]miners.Miner, 0, 10),
+		Balance: 0,
+
+		producers: &sync.WaitGroup{},
+		consumers: &sync.WaitGroup{},
+
+		ctx:       mineContext,
+		cancel:    mineCancel,
 		isRunning: false,
 	}
 }
 
-func (m *Service) Start() {
-	m.runMtx.Lock()
-	if m.isRunning {
+func (s *Service) Start() {
+	s.runMtx.Lock()
+	if s.isRunning {
 		fmt.Println("Mine is already running")
-		m.runMtx.Unlock()
+		s.runMtx.Unlock()
 		return
 	}
 
-	m.isRunning = true
-	m.runMtx.Unlock()
+	s.isRunning = true
+	s.runMtx.Unlock()
 
-	m.ctx, m.cancel = context.WithCancel(context.Background())
-	m.producers = &sync.WaitGroup{}
-	m.consumers = &sync.WaitGroup{}
+	s.ctx, s.cancel = context.WithCancel(context.Background())
+	s.producers = &sync.WaitGroup{}
+	s.consumers = &sync.WaitGroup{}
 
 	coalChan := make(chan resources.Coal)
 
-	m.producers.Add(1)
-	go PassiveIncome(m.ctx, m.producers, coalChan)
+	s.producers.Add(1)
+	go PassiveIncome(s.ctx, s.producers, coalChan)
 
-	m.consumers.Add(1)
+	s.consumers.Add(1)
 	go func() {
-		defer m.consumers.Done()
+		defer s.consumers.Done()
 
 		for coal := range coalChan {
-			m.Balance += coal
+			s.Balance += coal
 		}
 	}()
 
 	go func() {
-		m.producers.Wait()
+		s.producers.Wait()
 		close(coalChan)
 	}()
 }
 
-func (m *Service) Stop() {
-	m.runMtx.Lock()
-	defer m.runMtx.Unlock()
+func (s *Service) Stop() {
+	s.runMtx.Lock()
+	defer s.runMtx.Unlock()
 
-	if !m.isRunning {
+	if !s.isRunning {
 		fmt.Println("Mine is already not running")
 		return
 	}
 
-	m.cancel()
+	s.cancel()
 	fmt.Println("Stopping the mine")
 
-	m.producers.Wait()
-	m.consumers.Wait()
+	s.producers.Wait()
+	s.consumers.Wait()
 
 	fmt.Println("Service stopped")
-	m.isRunning = false
+	s.isRunning = false
+}
+
+func (s *Service) HireMiner() {
+	miner := miners.NewSmallMiner(s.ctx)
+	s.miners = append(s.miners, miner)
+
+	s.producers.Add(1)
+	go s.miners[0].Run(s.producers)
+}
+
+func (s *Service) PauseMiner() {
+	s.miners[0].Pause()
+}
+
+func (s *Service) ResumeMiner() {
+	s.miners[0].Resume()
 }

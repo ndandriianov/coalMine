@@ -37,3 +37,17 @@ func (h *Handlers) HandleGetBalance(w http.ResponseWriter, r *http.Request) {
 func logHttpWriteFailure() {
 	fmt.Println("failed to write http response")
 }
+
+// MINER HANDLERS
+
+func (h *Handlers) HandleRunSmallMiner(w http.ResponseWriter, r *http.Request) {
+	h.mine.HireMiner()
+}
+
+func (h *Handlers) HandlePauseSmallMiner(w http.ResponseWriter, r *http.Request) {
+	h.mine.PauseMiner()
+}
+
+func (h *Handlers) HandleResumeSmallMiner(w http.ResponseWriter, r *http.Request) {
+	h.mine.ResumeMiner()
+}

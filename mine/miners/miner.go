@@ -1,11 +1,10 @@
 package miners
 
-import (
-	"coalMine/mine/resources"
-	"context"
-)
+import "sync"
 
 type Miner interface {
-	Run(ctx context.Context) <-chan resources.Coal
+	Run(group *sync.WaitGroup)
+	Pause()
+	Resume()
 	Info() MinerInfo
 }
