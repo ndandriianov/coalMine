@@ -1,6 +1,7 @@
 package miners
 
 import (
+	"coalMine/mine/pauseController"
 	"coalMine/mine/resources"
 	"context"
 	"fmt"
@@ -9,25 +10,23 @@ import (
 )
 
 type SmallMiner struct {
-	ctx context.Context
-
-	cond     *sync.Cond
-	state    MinerState
-	stateMtx sync.Mutex
+	ctx       context.Context
+	pc        *pauseController.PauseController
+	startOnce sync.Once
 
 	energy        int
 	coalExtracted resources.Coal
 	infoMtx       sync.Mutex
 }
 
-func NewSmallMiner(ctx context.Context) *SmallMiner {
+func NewSmallMiner(ctx context.Context, pc *pauseController.PauseController) *SmallMiner {
 	m := &SmallMiner{
-		ctx:    ctx,
-		state:  NotStarted,
-		energy: 30,
-	}
+		ctx: ctx,
+		pc:  pc,
 
-	m.cond = sync.NewCond(&m.stateMtx)
+		energy:        30,
+		coalExtracted: 0,
+	}
 
 	return m
 }
@@ -35,47 +34,24 @@ func NewSmallMiner(ctx context.Context) *SmallMiner {
 func (m *SmallMiner) Run(group *sync.WaitGroup) {
 	defer group.Done()
 
-	m.stateMtx.Lock()
-	if m.state != NotStarted {
-		fmt.Println("Cannot run started miner")
-		m.stateMtx.Unlock()
-		return
-	}
+	m.startOnce.Do(func() {
+		ticker := time.NewTicker(3 * time.Second)
+		defer ticker.Stop()
 
-	m.state = Working
-	m.stateMtx.Unlock()
+		for {
+			select {
+			case <-m.ctx.Done():
+				fmt.Println("small miner was forced to finish his work")
+				return
+			case <-ticker.C:
+				if err := m.pc.WaitIfPaused(m.ctx); err != nil {
+					return
+				}
 
-	ticker := time.NewTicker(3 * time.Second)
-	defer ticker.Stop()
-
-	for {
-		select {
-		case <-m.ctx.Done():
-			fmt.Println("small miner was forced to finish his work")
-			return
-		case <-ticker.C:
-			m.stateMtx.Lock()
-			for m.state == Pause {
-				m.cond.Wait()
+				fmt.Println("small miner working")
 			}
-			m.stateMtx.Unlock()
-
-			fmt.Println("small miner working")
 		}
-	}
-}
-
-func (m *SmallMiner) Pause() {
-	m.stateMtx.Lock()
-	m.state = Pause
-	m.stateMtx.Unlock()
-}
-
-func (m *SmallMiner) Resume() {
-	m.stateMtx.Lock()
-	m.state = Working
-	m.stateMtx.Unlock()
-	m.cond.Signal()
+	})
 }
 
 func (m *SmallMiner) Info() MinerInfo {

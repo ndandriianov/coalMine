@@ -2,6 +2,7 @@ package mine
 
 import (
 	"coalMine/mine/miners"
+	"coalMine/mine/pauseController"
 	"coalMine/mine/resources"
 	"context"
 	"fmt"
@@ -17,6 +18,8 @@ type Service struct {
 	cancel    context.CancelFunc
 	isRunning bool
 	runMtx    sync.Mutex
+
+	pc *pauseController.PauseController
 }
 
 func NewMine() *Service {
@@ -32,6 +35,8 @@ func NewMine() *Service {
 		ctx:       mineContext,
 		cancel:    mineCancel,
 		isRunning: false,
+
+		pc: pauseController.NewPauseController(),
 	}
 }
 
@@ -89,18 +94,18 @@ func (s *Service) Stop() {
 	s.isRunning = false
 }
 
+func (s *Service) Pause() {
+	s.pc.Pause()
+}
+
+func (s *Service) Resume() {
+	s.pc.Resume()
+}
+
 func (s *Service) HireMiner() {
-	miner := miners.NewSmallMiner(s.ctx)
+	miner := miners.NewSmallMiner(s.ctx, s.pc)
 	s.miners = append(s.miners, miner)
 
 	s.producers.Add(1)
 	go s.miners[0].Run(s.producers)
-}
-
-func (s *Service) PauseMiner() {
-	s.miners[0].Pause()
-}
-
-func (s *Service) ResumeMiner() {
-	s.miners[0].Resume()
 }

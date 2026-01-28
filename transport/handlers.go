@@ -26,6 +26,14 @@ func (h *Handlers) HandleStop(w http.ResponseWriter, r *http.Request) {
 	h.mine.Stop()
 }
 
+func (h *Handlers) HandlePause(w http.ResponseWriter, r *http.Request) {
+	h.mine.Pause()
+}
+
+func (h *Handlers) HandleResume(w http.ResponseWriter, r *http.Request) {
+	h.mine.Resume()
+}
+
 func (h *Handlers) HandleGetBalance(w http.ResponseWriter, r *http.Request) {
 	balance := dto.Balance{Balance: int(h.mine.Balance)}
 	err := json.NewEncoder(w).Encode(balance)
@@ -34,20 +42,12 @@ func (h *Handlers) HandleGetBalance(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// MINER HANDLERS
+
 func logHttpWriteFailure() {
 	fmt.Println("failed to write http response")
 }
 
-// MINER HANDLERS
-
 func (h *Handlers) HandleRunSmallMiner(w http.ResponseWriter, r *http.Request) {
 	h.mine.HireMiner()
-}
-
-func (h *Handlers) HandlePauseSmallMiner(w http.ResponseWriter, r *http.Request) {
-	h.mine.PauseMiner()
-}
-
-func (h *Handlers) HandleResumeSmallMiner(w http.ResponseWriter, r *http.Request) {
-	h.mine.ResumeMiner()
 }
