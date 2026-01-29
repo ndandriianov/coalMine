@@ -1,14 +1,12 @@
 package main
 
 import (
-	"coalMine/mine"
 	"coalMine/transport"
 	"fmt"
 )
 
 func main() {
-	m := mine.NewMine()
-	handlers := transport.NewHandlers(m)
+	handlers := transport.NewHandlers()
 	server := transport.NewServer(handlers)
 
 	if err := server.Serve(); err != nil {

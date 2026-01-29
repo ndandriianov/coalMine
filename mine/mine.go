@@ -10,23 +10,22 @@ import (
 )
 
 type Service struct {
-	miners   []miners.Miner
-	Balance  resources.Coal
-	coalChan chan resources.Coal
+	miners     []miners.Miner
+	Balance    resources.Coal
+	BalanceMtx sync.Mutex
+	coalChan   chan resources.Coal
 
 	producers *sync.WaitGroup
 	consumers *sync.WaitGroup
 
-	ctx    context.Context
-	cancel context.CancelFunc
-
-	isRunning bool
-	runMtx    sync.Mutex
+	ctx       context.Context
+	cancel    context.CancelFunc
+	startOnce sync.Once
 
 	pc *pauseController.PauseController
 }
 
-func NewMine() *Service {
+func NewService() *Service {
 	mineContext, mineCancel := context.WithCancel(context.Background())
 
 	return &Service{
@@ -37,56 +36,33 @@ func NewMine() *Service {
 		producers: &sync.WaitGroup{},
 		consumers: &sync.WaitGroup{},
 
-		ctx:       mineContext,
-		cancel:    mineCancel,
-		isRunning: false,
+		ctx:    mineContext,
+		cancel: mineCancel,
 
 		pc: pauseController.NewPauseController(),
 	}
 }
 
 func (s *Service) Start() {
-	s.runMtx.Lock()
-	if s.isRunning {
-		fmt.Println("Mine is already running")
-		s.runMtx.Unlock()
-		return
-	}
+	s.startOnce.Do(func() {
+		s.ctx, s.cancel = context.WithCancel(context.Background())
+		s.producers = &sync.WaitGroup{}
+		s.consumers = &sync.WaitGroup{}
 
-	s.isRunning = true
-	s.runMtx.Unlock()
+		s.producers.Add(1)
+		go PassiveIncome(s.ctx, s.producers, s.pc, s.coalChan)
 
-	s.ctx, s.cancel = context.WithCancel(context.Background())
-	s.producers = &sync.WaitGroup{}
-	s.consumers = &sync.WaitGroup{}
+		s.consumers.Add(1)
+		go s.collectCoal()
 
-	s.producers.Add(1)
-	go PassiveIncome(s.ctx, s.producers, s.pc, s.coalChan)
-
-	s.consumers.Add(1)
-	go func() {
-		defer s.consumers.Done()
-
-		for coal := range s.coalChan {
-			s.Balance += coal
-		}
-	}()
-
-	go func() {
-		s.producers.Wait()
-		close(s.coalChan)
-	}()
+		go func() {
+			s.producers.Wait()
+			close(s.coalChan)
+		}()
+	})
 }
 
 func (s *Service) Stop() {
-	s.runMtx.Lock()
-	defer s.runMtx.Unlock()
-
-	if !s.isRunning {
-		fmt.Println("Mine is already not running")
-		return
-	}
-
 	s.cancel()
 	fmt.Println("Stopping the mine")
 
@@ -94,7 +70,6 @@ func (s *Service) Stop() {
 	s.consumers.Wait()
 
 	fmt.Println("Service stopped")
-	s.isRunning = false
 }
 
 func (s *Service) Pause() {
@@ -111,4 +86,16 @@ func (s *Service) HireMiner() {
 
 	s.producers.Add(1)
 	go s.miners[0].Run(s.producers)
+}
+
+func (s *Service) collectCoal() {
+	defer s.consumers.Done()
+
+	for coal := range s.coalChan {
+		s.BalanceMtx.Lock()
+		s.Balance += coal
+		s.BalanceMtx.Unlock()
+	}
+
+	fmt.Println("finished collecting coal")
 }

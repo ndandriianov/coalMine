@@ -12,13 +12,16 @@ type Handlers struct {
 	mine *mine.Service
 }
 
-func NewHandlers(mine *mine.Service) *Handlers {
+func NewHandlers() *Handlers {
+	m := mine.NewService()
+	m.Start()
 	return &Handlers{
-		mine: mine,
+		mine: m,
 	}
 }
 
-func (h *Handlers) HandleStart(w http.ResponseWriter, r *http.Request) {
+func (h *Handlers) HandleRestartMine(w http.ResponseWriter, r *http.Request) {
+	h.mine = mine.NewService()
 	h.mine.Start()
 }
 
