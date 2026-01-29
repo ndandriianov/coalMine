@@ -10,12 +10,16 @@ import (
 )
 
 type Service struct {
-	miners    []miners.Miner
-	Balance   resources.Coal
+	miners   []miners.Miner
+	Balance  resources.Coal
+	coalChan chan resources.Coal
+
 	producers *sync.WaitGroup
 	consumers *sync.WaitGroup
-	ctx       context.Context
-	cancel    context.CancelFunc
+
+	ctx    context.Context
+	cancel context.CancelFunc
+
 	isRunning bool
 	runMtx    sync.Mutex
 
@@ -26,8 +30,9 @@ func NewMine() *Service {
 	mineContext, mineCancel := context.WithCancel(context.Background())
 
 	return &Service{
-		miners:  make([]miners.Miner, 0, 10),
-		Balance: 0,
+		miners:   make([]miners.Miner, 0, 10),
+		Balance:  0,
+		coalChan: make(chan resources.Coal),
 
 		producers: &sync.WaitGroup{},
 		consumers: &sync.WaitGroup{},
@@ -55,23 +60,21 @@ func (s *Service) Start() {
 	s.producers = &sync.WaitGroup{}
 	s.consumers = &sync.WaitGroup{}
 
-	coalChan := make(chan resources.Coal)
-
 	s.producers.Add(1)
-	go PassiveIncome(s.ctx, s.producers, coalChan)
+	go PassiveIncome(s.ctx, s.producers, s.pc, s.coalChan)
 
 	s.consumers.Add(1)
 	go func() {
 		defer s.consumers.Done()
 
-		for coal := range coalChan {
+		for coal := range s.coalChan {
 			s.Balance += coal
 		}
 	}()
 
 	go func() {
 		s.producers.Wait()
-		close(coalChan)
+		close(s.coalChan)
 	}()
 }
 
@@ -103,7 +106,7 @@ func (s *Service) Resume() {
 }
 
 func (s *Service) HireMiner() {
-	miner := miners.NewSmallMiner(s.ctx, s.pc)
+	miner := miners.NewSmallMiner(s.ctx, s.pc, s.coalChan)
 	s.miners = append(s.miners, miner)
 
 	s.producers.Add(1)

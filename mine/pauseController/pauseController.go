@@ -6,51 +6,62 @@ import (
 )
 
 type PauseController struct {
-	isMineOnPause bool
-	mtx           sync.Mutex
-	cond          *sync.Cond
+	mtx    sync.RWMutex
+	pause  chan struct{}
+	resume chan struct{}
 }
 
-// NewPauseController returns the pointer to a new PauseController with initial value false.
+// NewPauseController returns the pointer to a new PauseController initially not on pause.
 func NewPauseController() *PauseController {
-	pc := &PauseController{
-		isMineOnPause: false,
-		mtx:           sync.Mutex{},
-	}
-	pc.cond = sync.NewCond(&pc.mtx)
+	pause := make(chan struct{})
+	resume := make(chan struct{})
+	close(resume)
 
-	return pc
+	return &PauseController{
+		pause:  pause,
+		resume: resume,
+	}
 }
 
 func (c *PauseController) Pause() {
 	c.mtx.Lock()
 	defer c.mtx.Unlock()
-	c.isMineOnPause = true
+
+	select {
+	case <-c.pause:
+	default:
+		close(c.pause)
+		c.resume = make(chan struct{})
+	}
 }
 
 func (c *PauseController) Resume() {
 	c.mtx.Lock()
 	defer c.mtx.Unlock()
-	c.isMineOnPause = false
-	c.cond.Broadcast()
+
+	select {
+	case <-c.resume:
+	default:
+		close(c.resume)
+		c.pause = make(chan struct{})
+	}
 }
 
 func (c *PauseController) WaitIfPaused(ctx context.Context) error {
-	c.mtx.Lock()
-	defer c.mtx.Unlock()
+	c.mtx.RLock()
+	resume := c.resume
+	c.mtx.RUnlock()
 
-	for c.isMineOnPause {
-		if ctx.Err() != nil {
-			return ctx.Err()
-		}
-		c.cond.Wait()
+	select {
+	case <-resume:
+		return nil
+	case <-ctx.Done():
+		return ctx.Err()
 	}
-
-	return nil
 }
 
-func (c *PauseController) IsMineOnPause() bool {
-	c.mtx.Lock()
-	defer c.mtx.Unlock()
-	return c.isMineOnPause
+func (c *PauseController) PauseChan() <-chan struct{} {
+	c.mtx.RLock()
+	defer c.mtx.RUnlock()
+	return c.pause
 }

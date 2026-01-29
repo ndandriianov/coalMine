@@ -17,15 +17,19 @@ type SmallMiner struct {
 	energy        int
 	coalExtracted resources.Coal
 	infoMtx       sync.Mutex
+
+	coalChan chan resources.Coal
 }
 
-func NewSmallMiner(ctx context.Context, pc *pauseController.PauseController) *SmallMiner {
+func NewSmallMiner(ctx context.Context, pc *pauseController.PauseController, coalChan chan resources.Coal) *SmallMiner {
 	m := &SmallMiner{
 		ctx: ctx,
 		pc:  pc,
 
 		energy:        30,
 		coalExtracted: 0,
+
+		coalChan: coalChan,
 	}
 
 	return m
@@ -45,10 +49,24 @@ func (m *SmallMiner) Run(group *sync.WaitGroup) {
 				return
 			case <-ticker.C:
 				if err := m.pc.WaitIfPaused(m.ctx); err != nil {
+					fmt.Println("small miner was forced to finish his work")
 					return
 				}
 
-				fmt.Println("small miner working")
+				select {
+				case <-m.pc.PauseChan():
+					fmt.Println("small miner on pause")
+					if err := m.pc.WaitIfPaused(m.ctx); err != nil {
+						fmt.Println("small miner was forced to finish his work")
+						return
+					}
+				case m.coalChan <- 1:
+					fmt.Println("small miner put 1 coal to coal chan")
+					m.infoMtx.Lock()
+					m.coalExtracted++
+					m.energy--
+					m.infoMtx.Unlock()
+				}
 			}
 		}
 	})
