@@ -13,6 +13,7 @@ type SmallMiner struct {
 	ctx       context.Context
 	pc        *pauseController.PauseController
 	startOnce sync.Once
+	started   bool // for making list of unstarted miner
 
 	energy        int
 	coalExtracted resources.Coal
@@ -23,8 +24,9 @@ type SmallMiner struct {
 
 func NewSmallMiner(ctx context.Context, pc *pauseController.PauseController, coalChan chan resources.Coal) *SmallMiner {
 	m := &SmallMiner{
-		ctx: ctx,
-		pc:  pc,
+		ctx:     ctx,
+		pc:      pc,
+		started: false,
 
 		energy:        30,
 		coalExtracted: 0,
@@ -39,10 +41,15 @@ func (m *SmallMiner) Run(group *sync.WaitGroup) {
 	defer group.Done()
 
 	m.startOnce.Do(func() {
+		m.started = true
 		ticker := time.NewTicker(3 * time.Second)
 		defer ticker.Stop()
 
 		for {
+			if m.energy <= 0 {
+				fmt.Println("small miner ran out of energy!")
+				return
+			}
 			select {
 			case <-m.ctx.Done():
 				fmt.Println("small miner was forced to finish his work")
@@ -79,5 +86,6 @@ func (m *SmallMiner) Info() MinerInfo {
 	return MinerInfo{
 		EnergyLeft:    m.energy,
 		CoalExtracted: int(m.coalExtracted),
+		Started:       m.started,
 	}
 }
