@@ -90,8 +90,9 @@ func (s *Service) HireMiner(minerType string) (int, error) {
 	var miner miners.Miner
 	switch minerType {
 	case "small":
-		smallMiner := miners.NewSmallMiner(s.pc, s.coalChan)
-		miner = smallMiner
+		miner = miners.NewSmallMiner(s.pc, s.coalChan)
+	case "middle":
+		miner = miners.NewMiddleMiner(s.pc, s.coalChan)
 	default:
 		return 0, errors.ErrInvalidMinerType
 	}

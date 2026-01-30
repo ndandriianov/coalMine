@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-type SmallMiner struct {
+type MiddleMiner struct {
 	pc        *pauseController.PauseController
 	startOnce sync.Once
 	started   bool // for making list of unstarted miner
@@ -23,15 +23,15 @@ type SmallMiner struct {
 	coalChan chan resources.Coal
 }
 
-func NewSmallMiner(pc *pauseController.PauseController, coalChan chan resources.Coal) *SmallMiner {
-	m := &SmallMiner{
+func NewMiddleMiner(pc *pauseController.PauseController, coalChan chan resources.Coal) *MiddleMiner {
+	m := &MiddleMiner{
 		pc:      pc,
 		started: false,
 
-		energy:            30,
-		coalPerExtraction: 1,
+		energy:            45,
+		coalPerExtraction: 3,
 		coalExtracted:     0,
-		sleepTimeSeconds:  3,
+		sleepTimeSeconds:  2,
 
 		coalChan: coalChan,
 	}
@@ -39,7 +39,7 @@ func NewSmallMiner(pc *pauseController.PauseController, coalChan chan resources.
 	return m
 }
 
-func (m *SmallMiner) Run(ctx context.Context, group *sync.WaitGroup) {
+func (m *MiddleMiner) Run(ctx context.Context, group *sync.WaitGroup) {
 	defer group.Done()
 
 	m.startOnce.Do(func() {
@@ -49,28 +49,28 @@ func (m *SmallMiner) Run(ctx context.Context, group *sync.WaitGroup) {
 
 		for {
 			if m.energy <= 0 {
-				fmt.Println("small miner ran out of energy!")
+				fmt.Println("middle miner ran out of energy!")
 				return
 			}
 			select {
 			case <-ctx.Done():
-				fmt.Println("small miner was forced to finish his work")
+				fmt.Println("middle miner was forced to finish his work")
 				return
 			case <-ticker.C:
 				if err := m.pc.WaitIfPaused(ctx); err != nil {
-					fmt.Println("small miner was forced to finish his work")
+					fmt.Println("middle miner was forced to finish his work")
 					return
 				}
 
 				select {
 				case <-m.pc.PauseChan():
-					fmt.Println("small miner on pause")
+					fmt.Println("middle miner on pause")
 					if err := m.pc.WaitIfPaused(ctx); err != nil {
-						fmt.Println("small miner was forced to finish his work")
+						fmt.Println("middle miner was forced to finish his work")
 						return
 					}
 				case m.coalChan <- m.coalPerExtraction:
-					fmt.Printf("small miner put %v coal to coal chan\n", m.coalPerExtraction)
+					fmt.Printf("middle miner put %v coal to coal chan\n", m.coalPerExtraction)
 					m.infoMtx.Lock()
 					m.coalExtracted += m.coalPerExtraction
 					m.energy--
@@ -81,12 +81,12 @@ func (m *SmallMiner) Run(ctx context.Context, group *sync.WaitGroup) {
 	})
 }
 
-func (m *SmallMiner) Info() MinerInfo {
+func (m *MiddleMiner) Info() MinerInfo {
 	m.infoMtx.Lock()
 	defer m.infoMtx.Unlock()
 
 	return MinerInfo{
-		Type:              "small",
+		Type:              "middle",
 		EnergyLeft:        m.energy,
 		CoalPerExtraction: m.coalPerExtraction,
 		CoalExtracted:     int(m.coalExtracted),
@@ -95,6 +95,6 @@ func (m *SmallMiner) Info() MinerInfo {
 	}
 }
 
-func (m *SmallMiner) HasStarted() bool {
+func (m *MiddleMiner) HasStarted() bool {
 	return m.started
 }
