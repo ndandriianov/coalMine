@@ -93,6 +93,8 @@ func (s *Service) HireMiner(minerType string) (int, error) {
 		miner = miners.NewSmallMiner(s.pc, s.coalChan)
 	case "middle":
 		miner = miners.NewMiddleMiner(s.pc, s.coalChan)
+	case "strong":
+		miner = miners.NewStrongMiner(s.pc, s.coalChan)
 	default:
 		return 0, errors.ErrInvalidMinerType
 	}
