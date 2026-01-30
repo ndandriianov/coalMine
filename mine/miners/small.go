@@ -10,7 +10,6 @@ import (
 )
 
 type SmallMiner struct {
-	ctx       context.Context
 	pc        *pauseController.PauseController
 	startOnce sync.Once
 	started   bool // for making list of unstarted miner
@@ -22,9 +21,8 @@ type SmallMiner struct {
 	coalChan chan resources.Coal
 }
 
-func NewSmallMiner(ctx context.Context, pc *pauseController.PauseController, coalChan chan resources.Coal) *SmallMiner {
+func NewSmallMiner(pc *pauseController.PauseController, coalChan chan resources.Coal) *SmallMiner {
 	m := &SmallMiner{
-		ctx:     ctx,
 		pc:      pc,
 		started: false,
 
@@ -37,7 +35,7 @@ func NewSmallMiner(ctx context.Context, pc *pauseController.PauseController, coa
 	return m
 }
 
-func (m *SmallMiner) Run(group *sync.WaitGroup) {
+func (m *SmallMiner) Run(ctx context.Context, group *sync.WaitGroup) {
 	defer group.Done()
 
 	m.startOnce.Do(func() {
@@ -51,11 +49,11 @@ func (m *SmallMiner) Run(group *sync.WaitGroup) {
 				return
 			}
 			select {
-			case <-m.ctx.Done():
+			case <-ctx.Done():
 				fmt.Println("small miner was forced to finish his work")
 				return
 			case <-ticker.C:
-				if err := m.pc.WaitIfPaused(m.ctx); err != nil {
+				if err := m.pc.WaitIfPaused(ctx); err != nil {
 					fmt.Println("small miner was forced to finish his work")
 					return
 				}
@@ -63,7 +61,7 @@ func (m *SmallMiner) Run(group *sync.WaitGroup) {
 				select {
 				case <-m.pc.PauseChan():
 					fmt.Println("small miner on pause")
-					if err := m.pc.WaitIfPaused(m.ctx); err != nil {
+					if err := m.pc.WaitIfPaused(ctx); err != nil {
 						fmt.Println("small miner was forced to finish his work")
 						return
 					}
@@ -84,8 +82,13 @@ func (m *SmallMiner) Info() MinerInfo {
 	defer m.infoMtx.Unlock()
 
 	return MinerInfo{
+		Type:          "small",
 		EnergyLeft:    m.energy,
 		CoalExtracted: int(m.coalExtracted),
 		Started:       m.started,
 	}
+}
+
+func (m *SmallMiner) HasStarted() bool {
+	return m.started
 }

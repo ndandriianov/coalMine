@@ -1,6 +1,7 @@
 package mine
 
 import (
+	"coalMine/helpers"
 	"coalMine/mine/miners"
 	"coalMine/mine/pauseController"
 	"coalMine/mine/resources"
@@ -11,6 +12,7 @@ import (
 
 type Service struct {
 	miners     []miners.Miner
+	minersMtx  sync.Mutex
 	Balance    resources.Coal
 	BalanceMtx sync.Mutex
 	coalChan   chan resources.Coal
@@ -80,12 +82,43 @@ func (s *Service) Resume() {
 	s.pc.Resume()
 }
 
-func (s *Service) HireMiner() {
-	miner := miners.NewSmallMiner(s.ctx, s.pc, s.coalChan)
+// HireMiner adds a miner to the mine.
+//
+// Returns the miners id.
+func (s *Service) HireMiner() int {
+	miner := miners.NewSmallMiner(s.pc, s.coalChan)
+
+	s.minersMtx.Lock()
+	defer s.minersMtx.Unlock()
 	s.miners = append(s.miners, miner)
 
+	return len(s.miners)
+}
+
+func (s *Service) RunMiner(id int) bool {
+	s.minersMtx.Lock()
+	currentMiner, ok := helpers.SafeGet(id, s.miners)
+	s.minersMtx.Unlock()
+
+	if !ok {
+		return false
+	}
+
 	s.producers.Add(1)
-	go s.miners[0].Run(s.producers)
+	go currentMiner.Run(s.ctx, s.producers)
+
+	return true
+}
+
+func (s *Service) RunAllNotStartedMiners() {
+	s.minersMtx.Lock()
+	for _, miner := range s.miners {
+		if !miner.HasStarted() {
+			s.producers.Add(1)
+			go miner.Run(s.ctx, s.producers)
+		}
+	}
+	s.minersMtx.Unlock()
 }
 
 func (s *Service) collectCoal() {

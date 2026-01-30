@@ -1,8 +1,12 @@
 package miners
 
-import "sync"
+import (
+	"context"
+	"sync"
+)
 
 type Miner interface {
-	Run(group *sync.WaitGroup)
+	Run(ctx context.Context, group *sync.WaitGroup)
 	Info() MinerInfo
+	HasStarted() bool
 }

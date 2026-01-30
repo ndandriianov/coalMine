@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 )
 
 type Handlers struct {
@@ -45,12 +46,23 @@ func (h *Handlers) HandleGetBalance(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// MINER HANDLERS
-
 func logHttpWriteFailure() {
 	fmt.Println("failed to write http response")
 }
 
-func (h *Handlers) HandleRunSmallMiner(w http.ResponseWriter, r *http.Request) {
+// MINER HANDLERS
+
+func (h *Handlers) HandleHireSmallMiner(w http.ResponseWriter, r *http.Request) {
 	h.mine.HireMiner()
+}
+
+func (h *Handlers) HandleRunMiner(w http.ResponseWriter, r *http.Request) {
+	rawId := r.URL.Query().Get("id")
+	if id, err := strconv.Atoi(rawId); err == nil {
+		if !h.mine.RunMiner(id) {
+			w.WriteHeader(http.StatusNotFound)
+		}
+		return
+	}
+	h.mine.RunAllNotStartedMiners()
 }
