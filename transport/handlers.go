@@ -2,8 +2,10 @@ package transport
 
 import (
 	"coalMine/mine"
+	mineErrors "coalMine/mine/errors"
 	"coalMine/transport/dto"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -53,7 +55,31 @@ func logHttpWriteFailure() {
 // MINER HANDLERS
 
 func (h *Handlers) HandleHireSmallMiner(w http.ResponseWriter, r *http.Request) {
-	h.mine.HireMiner()
+	minerType := r.URL.Query().Get("type")
+	if minerType == "" {
+		http.Error(w, "type is required", http.StatusBadRequest)
+		return
+	}
+
+	id, err := h.mine.HireMiner(minerType)
+	if err != nil {
+		if errors.Is(err, mineErrors.ErrInvalidMinerType) {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		http.Error(w, "internal error", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+
+	err = json.NewEncoder(w).Encode(map[string]int{
+		"id": id,
+	})
+	if err != nil {
+		fmt.Println("serializing error")
+	}
 }
 
 func (h *Handlers) HandleRunMiner(w http.ResponseWriter, r *http.Request) {

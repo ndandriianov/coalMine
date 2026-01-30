@@ -25,7 +25,7 @@ func (s *Server) Serve() error {
 
 	router.Path("/mine/balance").Methods("GET").HandlerFunc(s.handlers.HandleGetBalance)
 
-	router.Path("/mine/smallMiner/hire").Methods("POST").HandlerFunc(s.handlers.HandleHireSmallMiner)
+	router.Path("/mine/miner/hire").Methods("POST").HandlerFunc(s.handlers.HandleHireSmallMiner)
 	router.Path("/mine/miner/start").Methods("POST").HandlerFunc(s.handlers.HandleRunMiner)
 
 	if err := http.ListenAndServe(":9091", router); err != nil {

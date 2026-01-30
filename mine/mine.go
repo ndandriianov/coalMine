@@ -2,6 +2,7 @@ package mine
 
 import (
 	"coalMine/helpers"
+	"coalMine/mine/errors"
 	"coalMine/mine/miners"
 	"coalMine/mine/pauseController"
 	"coalMine/mine/resources"
@@ -85,14 +86,21 @@ func (s *Service) Resume() {
 // HireMiner adds a miner to the mine.
 //
 // Returns the miners id.
-func (s *Service) HireMiner() int {
-	miner := miners.NewSmallMiner(s.pc, s.coalChan)
+func (s *Service) HireMiner(minerType string) (int, error) {
+	var miner miners.Miner
+	switch minerType {
+	case "small":
+		smallMiner := miners.NewSmallMiner(s.pc, s.coalChan)
+		miner = smallMiner
+	default:
+		return 0, errors.ErrInvalidMinerType
+	}
 
 	s.minersMtx.Lock()
 	defer s.minersMtx.Unlock()
 	s.miners = append(s.miners, miner)
 
-	return len(s.miners)
+	return len(s.miners), nil
 }
 
 func (s *Service) RunMiner(id int) bool {
