@@ -13,7 +13,7 @@ import (
 
 type Service struct {
 	miners     []miners.Miner
-	minersMtx  sync.Mutex
+	minersMtx  sync.RWMutex
 	Balance    resources.Coal
 	BalanceMtx sync.Mutex
 	coalChan   chan resources.Coal
@@ -107,9 +107,9 @@ func (s *Service) HireMiner(minerType string) (int, error) {
 }
 
 func (s *Service) RunMiner(id int) bool {
-	s.minersMtx.Lock()
+	s.minersMtx.RLock()
 	currentMiner, ok := helpers.SafeGet(id, s.miners)
-	s.minersMtx.Unlock()
+	s.minersMtx.RUnlock()
 
 	if !ok {
 		return false
@@ -122,14 +122,14 @@ func (s *Service) RunMiner(id int) bool {
 }
 
 func (s *Service) RunAllNotStartedMiners() {
-	s.minersMtx.Lock()
+	s.minersMtx.RLock()
 	for _, miner := range s.miners {
 		if !miner.HasStarted() {
 			s.producers.Add(1)
 			go miner.Run(s.ctx, s.producers)
 		}
 	}
-	s.minersMtx.Unlock()
+	s.minersMtx.RUnlock()
 }
 
 func (s *Service) collectCoal() {
@@ -142,4 +142,22 @@ func (s *Service) collectCoal() {
 	}
 
 	fmt.Println("finished collecting coal")
+}
+
+// GetWorkingMiners returns info about all working miners.
+//
+// If type is empty string, GetWorkingMiners will return info for all types of miners.
+func (s *Service) GetWorkingMiners(minerType string) map[int]miners.MinerInfo {
+	collection := make(map[int]miners.MinerInfo)
+
+	s.minersMtx.RLock()
+	for id, miner := range s.miners {
+		info := miner.Info()
+		if info.Type == minerType || minerType == "" {
+			collection[id] = info
+		}
+	}
+	s.minersMtx.RUnlock()
+
+	return collection
 }

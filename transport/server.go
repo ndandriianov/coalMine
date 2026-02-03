@@ -18,6 +18,7 @@ func NewServer(handlers *Handlers) *Server {
 func (s *Server) Serve() error {
 	router := mux.NewRouter()
 
+	router.Path("/mine/start").Methods("POST").HandlerFunc(s.handlers.HandleStartMine)
 	router.Path("/mine/restart").Methods("POST").HandlerFunc(s.handlers.HandleRestartMine)
 	router.Path("/mine/stop").Methods("POST").HandlerFunc(s.handlers.HandleStop)
 	router.Path("/mine/pause").Methods("POST").HandlerFunc(s.handlers.HandlePause)
@@ -25,10 +26,12 @@ func (s *Server) Serve() error {
 
 	router.Path("/mine/balance").Methods("GET").HandlerFunc(s.handlers.HandleGetBalance)
 
-	router.Path("/mine/miner/hire").Methods("POST").HandlerFunc(s.handlers.HandleHireSmallMiner)
+	router.Path("/mine/miner/hire").Methods("POST").HandlerFunc(s.handlers.HandleHireMiner)
 	router.Path("/mine/miner/start").Methods("POST").HandlerFunc(s.handlers.HandleRunMiner)
 
-	if err := http.ListenAndServe(":9091", router); err != nil {
+	handler := CorsMiddleware(router)
+
+	if err := http.ListenAndServe(":9091", handler); err != nil {
 		if errors.Is(err, http.ErrServerClosed) {
 			return nil
 		}

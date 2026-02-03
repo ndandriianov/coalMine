@@ -17,10 +17,13 @@ type Handlers struct {
 
 func NewHandlers() *Handlers {
 	m := mine.NewService()
-	m.Start()
 	return &Handlers{
 		mine: m,
 	}
+}
+
+func (h *Handlers) HandleStartMine(w http.ResponseWriter, r *http.Request) {
+	h.mine.Start()
 }
 
 func (h *Handlers) HandleRestartMine(w http.ResponseWriter, r *http.Request) {
@@ -54,7 +57,7 @@ func logHttpWriteFailure() {
 
 // MINER HANDLERS
 
-func (h *Handlers) HandleHireSmallMiner(w http.ResponseWriter, r *http.Request) {
+func (h *Handlers) HandleHireMiner(w http.ResponseWriter, r *http.Request) {
 	minerType := r.URL.Query().Get("type")
 	if minerType == "" {
 		http.Error(w, "type is required", http.StatusBadRequest)
@@ -91,4 +94,8 @@ func (h *Handlers) HandleRunMiner(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	h.mine.RunAllNotStartedMiners()
+}
+
+func (h *Handlers) HandleGetWorkingMiners(w http.ResponseWriter, r *http.Request) {
+
 }
