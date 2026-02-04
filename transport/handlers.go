@@ -26,6 +26,14 @@ func (h *Handlers) HandleStartMine(w http.ResponseWriter, r *http.Request) {
 	h.mine.Start()
 }
 
+func (h *Handlers) HandleMineStarted(w http.ResponseWriter, r *http.Request) {
+	started := dto.Started{Started: h.mine.Started()}
+	err := json.NewEncoder(w).Encode(started)
+	if err != nil {
+		logHttpWriteFailure()
+	}
+}
+
 func (h *Handlers) HandleRestartMine(w http.ResponseWriter, r *http.Request) {
 	h.mine = mine.NewService()
 	h.mine.Start()

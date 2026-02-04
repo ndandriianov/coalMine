@@ -19,6 +19,7 @@ func (s *Server) Serve() error {
 	router := mux.NewRouter()
 
 	router.Path("/mine/start").Methods("POST").HandlerFunc(s.handlers.HandleStartMine)
+	router.Path("/mine/start").Methods("GET").HandlerFunc(s.handlers.HandleMineStarted)
 	router.Path("/mine/restart").Methods("POST").HandlerFunc(s.handlers.HandleRestartMine)
 	router.Path("/mine/stop").Methods("POST").HandlerFunc(s.handlers.HandleStop)
 	router.Path("/mine/pause").Methods("POST").HandlerFunc(s.handlers.HandlePause)

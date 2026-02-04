@@ -9,6 +9,7 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"sync/atomic"
 )
 
 type Service struct {
@@ -24,6 +25,7 @@ type Service struct {
 	ctx       context.Context
 	cancel    context.CancelFunc
 	startOnce sync.Once
+	started   atomic.Bool
 
 	pc *pauseController.PauseController
 }
@@ -31,7 +33,7 @@ type Service struct {
 func NewService() *Service {
 	mineContext, mineCancel := context.WithCancel(context.Background())
 
-	return &Service{
+	s := &Service{
 		miners:   make([]miners.Miner, 0, 10),
 		Balance:  0,
 		coalChan: make(chan resources.Coal),
@@ -44,10 +46,14 @@ func NewService() *Service {
 
 		pc: pauseController.NewPauseController(),
 	}
+
+	s.started.Store(false)
+	return s
 }
 
 func (s *Service) Start() {
 	s.startOnce.Do(func() {
+		s.started.Store(true)
 		s.ctx, s.cancel = context.WithCancel(context.Background())
 		s.producers = &sync.WaitGroup{}
 		s.consumers = &sync.WaitGroup{}
@@ -63,6 +69,10 @@ func (s *Service) Start() {
 			close(s.coalChan)
 		}()
 	})
+}
+
+func (s *Service) Started() bool {
+	return s.started.Load()
 }
 
 func (s *Service) Stop() {
