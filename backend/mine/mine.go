@@ -154,10 +154,10 @@ func (s *Service) collectCoal() {
 	fmt.Println("finished collecting coal")
 }
 
-// GetWorkingMiners returns info about all working miners.
+// GetMiners returns info about all working miners.
 //
-// If type is empty string, GetWorkingMiners will return info for all types of miners.
-func (s *Service) GetWorkingMiners(minerType string) map[int]miners.MinerInfo {
+// If type is empty string, GetMiners will return info for all types of miners.
+func (s *Service) GetMiners(minerType string) map[int]miners.MinerInfo {
 	collection := make(map[int]miners.MinerInfo)
 
 	s.minersMtx.RLock()

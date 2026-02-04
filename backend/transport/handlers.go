@@ -104,6 +104,12 @@ func (h *Handlers) HandleRunMiner(w http.ResponseWriter, r *http.Request) {
 	h.mine.RunAllNotStartedMiners()
 }
 
-func (h *Handlers) HandleGetWorkingMiners(w http.ResponseWriter, r *http.Request) {
+func (h *Handlers) HandleGetMiners(w http.ResponseWriter, r *http.Request) {
+	minerType := r.URL.Query().Get("type")
+	miners := h.mine.GetMiners(minerType)
 
+	err := json.NewEncoder(w).Encode(miners)
+	if err != nil {
+		logHttpWriteFailure()
+	}
 }
