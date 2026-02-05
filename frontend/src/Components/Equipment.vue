@@ -66,13 +66,48 @@ onUnmounted(() => {
     </div>
 
     <div v-else>
-      <div>
-        {{equipment}}
-      </div>
+      <ul class="equipment-list">
+        <li v-for="(value, name) in equipment" :key="name">
+          <span class="label">{{ name }}</span>
+          <span
+              class="status"
+              :class="{ on: value, off: !value }"
+          >
+        {{ value ? "Есть" : "Нет" }}
+      </span>
+        </li>
+      </ul>
     </div>
+
   </div>
 </template>
 
 <style scoped>
+.equipment-list {
+  padding: 0;
+  margin: 0;
+}
+
+.equipment-list li {
+  list-style: none;
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  margin-bottom: 8px;
+}
+
+.label {
+  font-weight: 500;
+}
+
+.status.on {
+  color: green;
+}
+
+.status.off {
+  color: red;
+}
 
 </style>
