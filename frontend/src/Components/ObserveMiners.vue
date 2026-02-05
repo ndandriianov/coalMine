@@ -2,15 +2,9 @@
 import { ref, onMounted, onUnmounted } from "vue"
 import axios from "axios"
 
+import type {MinerInfo} from "../entities.ts";
+import Miner from "../Miner.vue";
 
-interface MinerInfo {
-  Type: string
-  EnergyLeft: number
-  CoalPerExtraction: number
-  CoalExtracted: number
-  Started: boolean
-  SleepTimeSeconds: number
-}
 
 type MinersResponse = Record<number, MinerInfo>
 
@@ -74,13 +68,7 @@ onUnmounted(() => {
 
     <ul v-else>
       <li v-for="(miner, id) in miners" :key="id">
-        <strong>ID:</strong> {{ id }}<br />
-        <strong>Тип:</strong> {{ miner.Type }}<br />
-        <strong>Энергия:</strong> {{ miner.EnergyLeft }}<br />
-        <strong>Уголь за добычу:</strong> {{ miner.CoalPerExtraction }}<br />
-        <strong>Добыто угля:</strong> {{ miner.CoalExtracted }}<br />
-        <strong>Запущен:</strong> {{ miner.Started ? "Да" : "Нет" }}<br />
-        <strong>Время сна:</strong> {{ miner.SleepTimeSeconds }} сек
+        <Miner :miner="miner" :miner-id="id" :id="id"/>
       </li>
     </ul>
   </div>
