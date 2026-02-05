@@ -27,6 +27,11 @@ type Service struct {
 	startOnce sync.Once
 	started   atomic.Bool
 
+	pickaxe      bool
+	ventilation  bool
+	minecarts    bool
+	equipmentMtx sync.Mutex
+
 	pc *pauseController.PauseController
 }
 
@@ -170,4 +175,17 @@ func (s *Service) GetMiners(minerType string) map[int]miners.MinerInfo {
 	s.minersMtx.RUnlock()
 
 	return collection
+}
+
+func (s *Service) GetEquipment() EquipmentInfo {
+	s.equipmentMtx.Lock()
+	defer s.equipmentMtx.Unlock()
+
+	info := EquipmentInfo{
+		Pickaxe:     s.pickaxe,
+		Ventilation: s.ventilation,
+		Minecarts:   s.minecarts,
+	}
+
+	return info
 }

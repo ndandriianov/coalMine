@@ -113,3 +113,10 @@ func (h *Handlers) HandleGetMiners(w http.ResponseWriter, r *http.Request) {
 		logHttpWriteFailure()
 	}
 }
+
+func (h *Handlers) HandleGetEquipment(w http.ResponseWriter, r *http.Request) {
+	err := json.NewEncoder(w).Encode(h.mine.GetEquipment())
+	if err != nil {
+		logHttpWriteFailure()
+	}
+}

@@ -6,3 +6,9 @@ export interface MinerInfo {
   Started: boolean
   SleepTimeSeconds: number
 }
+
+export interface EquipmentInfo {
+  Pickaxe: boolean
+  Ventilation: boolean
+  Minecarts: boolean
+}
