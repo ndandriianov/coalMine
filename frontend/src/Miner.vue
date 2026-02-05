@@ -1,11 +1,24 @@
 <script setup lang="ts">
 import MyButton from "./Components/UI/MyButton.vue";
 import type {MinerInfo} from "./entities.ts";
+import axios from "axios";
 
-defineProps<{
+const props = defineProps<{
   miner: MinerInfo
   minerId: number
 }>()
+
+async function StartMiner() {
+  try {
+    await axios.post("http://localhost:9091/mine/miner/start", null, {
+      params: {
+        id: props.minerId,
+      }
+    })
+  } catch (e) {
+    console.error("не удалось запустить шахтера:", e)
+  }
+}
 </script>
 
 <template>
@@ -18,7 +31,7 @@ defineProps<{
     <strong>Запущен:</strong> {{ miner.Started ? "Да" : "Нет" }}<br/>
     <strong>Время сна:</strong> {{ miner.SleepTimeSeconds }} сек
 
-    <MyButton v-if="!miner.Started">
+    <MyButton v-if="!miner.Started" @click.prevent="StartMiner">
       Запустить
     </MyButton>
   </div>
