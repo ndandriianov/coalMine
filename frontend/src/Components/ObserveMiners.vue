@@ -68,7 +68,7 @@ onUnmounted(() => {
 
     <ul v-else>
       <li v-for="(miner, id) in miners" :key="id">
-        <Miner :miner="miner" :miner-id="id" :id="id"/>
+        <Miner :miner="miner" :miner-id="Number(id)" :key="id"/>
       </li>
     </ul>
   </div>
