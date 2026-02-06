@@ -1,19 +1,28 @@
 <script setup lang="ts">
-import {ref, onMounted, onUnmounted} from "vue"
+import {ref, onMounted, onUnmounted, computed, watch} from "vue"
 import axios from "axios"
 
 import type {EquipmentInfo} from "../entities.ts";
 import MyButton from "./UI/MyButton.vue";
 
 
-type EquipmentResponse = Record<number, EquipmentInfo>
-
-
-const equipment = ref<EquipmentResponse>({})
+const equipment = ref<EquipmentInfo>()
 const isLoading = ref(false)
 const error = ref<string | null>(null)
 
 let intervalId: number | undefined;
+
+
+const allBought = computed(() => {
+  if (!equipment.value) return false
+  return Object.values(equipment.value).every((value) => value === true)
+})
+const showModal = ref(false)
+watch(allBought, (newValue) => {
+  if (newValue) {
+    showModal.value = true
+  }
+})
 
 
 async function fetchEquipment() {
@@ -21,7 +30,7 @@ async function fetchEquipment() {
     isLoading.value = true
     error.value = null
 
-    const response = await axios.get<EquipmentResponse>(
+    const response = await axios.get<EquipmentInfo>(
         "http://localhost:9091/mine/equipment"
     )
 
@@ -40,6 +49,15 @@ async function buyEquipment(equipment: string) {
     })
   } catch (e) {
     console.error("не удалось купить оборудование", e)
+  }
+}
+
+async function restartTheGame() {
+  try {
+    await axios.post("http://localhost:9091/mine/restart")
+    showModal.value = false
+  } catch (e) {
+    console.error("не удалось перезапустить игру", e)
   }
 }
 
@@ -64,16 +82,8 @@ onUnmounted(() => {
   <div>
     <h2>Оборудование</h2>
 
-    <div v-if="isLoading && Object.keys(equipment).length === 0">
-      Загрузка...
-    </div>
-
-    <div v-else-if="error">
+    <div v-if="error">
       {{ error }}
-    </div>
-
-    <div v-else-if="Object.keys(equipment).length === 0">
-      Оборудования нет
     </div>
 
     <div v-else>
@@ -97,6 +107,18 @@ onUnmounted(() => {
     </div>
 
   </div>
+
+  <div v-if="showModal" class="modal-overlay">
+    <div class="modal">
+      <h3>Поздравляем!</h3>
+      <p>Всё оборудование куплено.</p>
+
+      <MyButton @click="restartTheGame">
+        Перезапустить игру
+      </MyButton>
+    </div>
+  </div>
+
 </template>
 
 <style scoped>
@@ -125,6 +147,24 @@ onUnmounted(() => {
 
 .status.off {
   color: red;
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal {
+  background: white;
+  padding: 20px 24px;
+  border-radius: 10px;
+  min-width: 260px;
+  text-align: center;
 }
 
 </style>
