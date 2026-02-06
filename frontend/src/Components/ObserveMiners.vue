@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from "vue"
+import {ref, onMounted, onUnmounted, computed} from "vue"
 import axios from "axios"
 
 import type {MinerInfo} from "../entities.ts";
 import Miner from "../Miner.vue";
+import MyButton from "./UI/MyButton.vue";
 
 
 type MinersResponse = Record<number, MinerInfo>
@@ -34,6 +35,20 @@ async function fetchMiners() {
 }
 
 
+const hasNotStarted = computed(() => {
+  return Object.values(miners.value).some(miner => !miner.Started)
+})
+
+async function runAllMiners() {
+  try {
+    await axios.post("http://localhost:9091/mine/miner/start")
+    fetchMiners() // обновляем состояние после запуска
+  } catch (e) {
+    console.error("не удалось запустить всех майнеров", e)
+  }
+}
+
+
 // lifecycle
 onMounted(() => {
   fetchMiners();
@@ -53,6 +68,14 @@ onUnmounted(() => {
 <template>
   <div>
     <h2>Майнеры</h2>
+
+    <MyButton
+        v-if="hasNotStarted"
+        @click.prevent="runAllMiners"
+        style="margin-bottom: 12px"
+    >
+      Запустить все
+    </MyButton>
 
     <div v-if="isLoading && Object.keys(miners).length === 0">
       Загрузка...
