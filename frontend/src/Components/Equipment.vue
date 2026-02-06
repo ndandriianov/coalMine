@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from "vue"
+import {ref, onMounted, onUnmounted} from "vue"
 import axios from "axios"
 
 import type {EquipmentInfo} from "../entities.ts";
+import MyButton from "./UI/MyButton.vue";
 
 
 type EquipmentResponse = Record<number, EquipmentInfo>
@@ -29,6 +30,16 @@ async function fetchEquipment() {
     error.value = "Ошибка при загрузке оборудования"
   } finally {
     isLoading.value = false
+  }
+}
+
+async function buyEquipment(equipment: string) {
+  try {
+    await axios.post("http://localhost:9091/mine/equipment", {
+      Equipment: equipment
+    })
+  } catch (e) {
+    console.error("не удалось купить оборудование", e)
   }
 }
 
@@ -69,12 +80,18 @@ onUnmounted(() => {
       <ul class="equipment-list">
         <li v-for="(value, name) in equipment" :key="name">
           <span class="label">{{ name }}</span>
-          <span
-              class="status"
-              :class="{ on: value, off: !value }"
-          >
-        {{ value ? "Есть" : "Нет" }}
-      </span>
+
+          <div style="display: flex; flex-direction: column; align-items: center; gap: 5px">
+            <span
+                class="status"
+                :class="{ on: value, off: !value }"
+            >
+              {{ value ? "Есть" : "Нет" }}
+            </span>
+            <MyButton v-if="!value" @click.prevent="() => buyEquipment(name)">
+              Купить
+            </MyButton>
+          </div>
         </li>
       </ul>
     </div>

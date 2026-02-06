@@ -12,3 +12,19 @@ export interface EquipmentInfo {
   Ventilation: boolean
   Minecarts: boolean
 }
+
+export const EquipmentType = {
+  Pickaxe: 0,
+  Ventilation: 1,
+  Minecarts: 2,
+} as const
+
+export type EquipmentType =
+  typeof EquipmentType[keyof typeof EquipmentType]
+
+
+export const EquipmentLabels: Record<EquipmentType, string> = {
+  [EquipmentType.Pickaxe]: "Кирка",
+  [EquipmentType.Ventilation]: "Вентиляция",
+  [EquipmentType.Minecarts]: "Вагонетки",
+}

@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 )
 
 type Handlers struct {
@@ -125,7 +126,7 @@ func (h *Handlers) HandleBuyEquipment(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var eqType equipment.Type
-	switch purchase.Equipment {
+	switch strings.ToLower(purchase.Equipment) {
 	case "pickaxe":
 		eqType = equipment.Pickaxe
 	case "ventilation":
