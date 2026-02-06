@@ -105,6 +105,10 @@ func (s *Service) Resume() {
 	s.pc.Resume()
 }
 
+func (s *Service) IsOnPause() bool {
+	return s.pc.IsOnPause()
+}
+
 // HireMiner adds a miner to the mine.
 //
 // Returns the miners id.

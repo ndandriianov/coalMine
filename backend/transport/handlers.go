@@ -53,6 +53,14 @@ func (h *Handlers) HandleResume(w http.ResponseWriter, r *http.Request) {
 	h.mine.Resume()
 }
 
+func (h *Handlers) IsOnPause(w http.ResponseWriter, r *http.Request) {
+	pause := dto.Pause{IsOnPause: h.mine.IsOnPause()}
+	err := json.NewEncoder(w).Encode(pause)
+	if err != nil {
+		logHttpWriteFailure()
+	}
+}
+
 func (h *Handlers) HandleGetBalance(w http.ResponseWriter, r *http.Request) {
 	balance := dto.Balance{Balance: int(h.mine.Balance)}
 	err := json.NewEncoder(w).Encode(balance)

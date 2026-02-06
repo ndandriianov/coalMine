@@ -60,6 +60,18 @@ func (c *PauseController) WaitIfPaused(ctx context.Context) error {
 	}
 }
 
+func (c *PauseController) IsOnPause() bool {
+	c.mtx.Lock()
+	defer c.mtx.Unlock()
+
+	select {
+	case <-c.pause:
+		return true
+	default:
+		return false
+	}
+}
+
 func (c *PauseController) PauseChan() <-chan struct{} {
 	c.mtx.RLock()
 	defer c.mtx.RUnlock()
