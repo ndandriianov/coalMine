@@ -14,9 +14,13 @@ import (
 )
 
 const (
-	pickaxePrice     = 3000
-	ventilationPrice = 15000
-	minecartsPrice   = 50000
+	smallMinerPrice  resources.Coal = 5
+	middleMinerPrice resources.Coal = 50
+	strongMinerPrice resources.Coal = 450
+
+	pickaxePrice     resources.Coal = 3000
+	ventilationPrice resources.Coal = 15000
+	minecartsPrice   resources.Coal = 50000
 )
 
 type Service struct {
@@ -114,13 +118,31 @@ func (s *Service) IsOnPause() bool {
 // Returns the miners id.
 func (s *Service) HireMiner(minerType string) (int, error) {
 	var miner miners.Miner
+	s.BalanceMtx.Lock()
+	defer s.BalanceMtx.Unlock()
+
 	switch minerType {
 	case "small":
+		if s.Balance < smallMinerPrice {
+			return 0, errors.ErrNotEnoughCoal
+		}
 		miner = miners.NewSmallMiner(s.pc, s.coalChan)
+		s.Balance -= smallMinerPrice
+
 	case "middle":
+		if s.Balance < middleMinerPrice {
+			return 0, errors.ErrNotEnoughCoal
+		}
 		miner = miners.NewMiddleMiner(s.pc, s.coalChan)
+		s.Balance -= middleMinerPrice
+
 	case "strong":
+		if s.Balance < strongMinerPrice {
+			return 0, errors.ErrNotEnoughCoal
+		}
 		miner = miners.NewStrongMiner(s.pc, s.coalChan)
+		s.Balance -= strongMinerPrice
+
 	default:
 		return 0, errors.ErrInvalidMinerType
 	}

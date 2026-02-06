@@ -87,6 +87,9 @@ func (h *Handlers) HandleHireMiner(w http.ResponseWriter, r *http.Request) {
 		if errors.Is(err, mineErrors.ErrInvalidMinerType) {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
+		} else if errors.Is(err, mineErrors.ErrNotEnoughCoal) {
+			http.Error(w, err.Error(), http.StatusForbidden)
+			return
 		}
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
