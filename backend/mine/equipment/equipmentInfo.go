@@ -1,4 +1,4 @@
-package mine
+package equipment
 
 type EquipmentInfo struct {
 	Pickaxe     bool

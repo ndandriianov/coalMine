@@ -2,6 +2,7 @@ package mine
 
 import (
 	"coalMine/helpers"
+	"coalMine/mine/equipment"
 	"coalMine/mine/errors"
 	"coalMine/mine/miners"
 	"coalMine/mine/pauseController"
@@ -10,6 +11,12 @@ import (
 	"fmt"
 	"sync"
 	"sync/atomic"
+)
+
+const (
+	pickaxePrice     = 3000
+	ventilationPrice = 15000
+	minecartsPrice   = 50000
 )
 
 type Service struct {
@@ -177,11 +184,50 @@ func (s *Service) GetMiners(minerType string) map[int]miners.MinerInfo {
 	return collection
 }
 
-func (s *Service) GetEquipment() EquipmentInfo {
+func (s *Service) BuyEquipment(equipmentType equipment.Type) error {
+	s.BalanceMtx.Lock()
+	defer s.BalanceMtx.Unlock()
+
 	s.equipmentMtx.Lock()
 	defer s.equipmentMtx.Unlock()
 
-	info := EquipmentInfo{
+	switch equipmentType {
+	case equipment.Pickaxe:
+		if s.Balance >= pickaxePrice && !s.pickaxe {
+			s.pickaxe = true
+		} else if s.pickaxe {
+			return errors.ErrEquipmentIsAlreadyBought
+		} else {
+			return errors.ErrNotEnoughCoal
+		}
+
+	case equipment.Ventilation:
+		if s.Balance >= ventilationPrice && !s.ventilation {
+			s.ventilation = true
+		} else if s.ventilation {
+			return errors.ErrEquipmentIsAlreadyBought
+		} else {
+			return errors.ErrNotEnoughCoal
+		}
+
+	case equipment.Minecarts:
+		if s.Balance >= minecartsPrice && !s.minecarts {
+			s.minecarts = true
+		} else if s.minecarts {
+			return errors.ErrEquipmentIsAlreadyBought
+		} else {
+			return errors.ErrNotEnoughCoal
+		}
+	}
+
+	return nil
+}
+
+func (s *Service) GetEquipment() equipment.EquipmentInfo {
+	s.equipmentMtx.Lock()
+	defer s.equipmentMtx.Unlock()
+
+	info := equipment.EquipmentInfo{
 		Pickaxe:     s.pickaxe,
 		Ventilation: s.ventilation,
 		Minecarts:   s.minecarts,

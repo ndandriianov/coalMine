@@ -31,6 +31,7 @@ func (s *Server) Serve() error {
 	router.Path("/mine/miner/start").Methods("POST").HandlerFunc(s.handlers.HandleRunMiner)
 	router.Path("/mine/miner").Methods("GET").HandlerFunc(s.handlers.HandleGetMiners)
 
+	router.Path("/mine/equipment").Methods("POST").HandlerFunc(s.handlers.HandleBuyEquipment)
 	router.Path("/mine/equipment").Methods("GET").HandlerFunc(s.handlers.HandleGetEquipment)
 
 	handler := CorsMiddleware(router)

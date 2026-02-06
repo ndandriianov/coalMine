@@ -2,6 +2,7 @@ package transport
 
 import (
 	"coalMine/mine"
+	"coalMine/mine/equipment"
 	mineErrors "coalMine/mine/errors"
 	"coalMine/transport/dto"
 	"encoding/json"
@@ -111,6 +112,40 @@ func (h *Handlers) HandleGetMiners(w http.ResponseWriter, r *http.Request) {
 	err := json.NewEncoder(w).Encode(miners)
 	if err != nil {
 		logHttpWriteFailure()
+	}
+}
+
+// Equipment
+
+func (h *Handlers) HandleBuyEquipment(w http.ResponseWriter, r *http.Request) {
+	var purchase dto.EquipmentPurchase
+	if err := json.NewDecoder(r.Body).Decode(&purchase); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	var eqType equipment.Type
+	switch purchase.Equipment {
+	case "pickaxe":
+		eqType = equipment.Pickaxe
+	case "ventilation":
+		eqType = equipment.Ventilation
+	case "minecarts":
+		eqType = equipment.Minecarts
+	default:
+		http.Error(w, "equipment type is not specified", http.StatusBadRequest)
+		return
+	}
+
+	err := h.mine.BuyEquipment(eqType)
+	if err != nil {
+		if errors.Is(err, mineErrors.ErrEquipmentIsAlreadyBought) {
+			http.Error(w, err.Error(), http.StatusConflict)
+		} else if errors.Is(err, mineErrors.ErrNotEnoughCoal) {
+			http.Error(w, err.Error(), http.StatusForbidden)
+		} else {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
 	}
 }
 
