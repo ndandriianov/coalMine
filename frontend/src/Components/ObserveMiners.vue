@@ -68,6 +68,7 @@ const exhaustedMiners = computed(() =>
     )
 )
 
+const isMinersOpen = ref(true)
 const isNotStartedOpen = ref(true)
 const isWorkingOpen = ref(true)
 const isExhaustedOpen = ref(true)
@@ -91,65 +92,73 @@ onUnmounted(() => {
 
 <template>
   <div>
-    <h2>Майнеры</h2>
+    <h2 class="miners-title">
+      <CollapseToggle
+          :is-open="isMinersOpen"
+          @click="isMinersOpen = !isMinersOpen"
+      />
+      Майнеры
+    </h2>
 
-    <MyButton
-        v-if="hasNotStarted"
-        @click.prevent="runAllMiners"
-        style="margin-bottom: 12px"
-    >
-      Запустить все
-    </MyButton>
+    <div v-show="isMinersOpen">
+      <MyButton
+          v-if="hasNotStarted"
+          @click.prevent="runAllMiners"
+          style="margin-bottom: 12px"
+      >
+        Запустить все
+      </MyButton>
 
-    <div v-if="notStartedMiners.length">
-      <h3 class="section-title">
-        <CollapseToggle
-            :is-open="isNotStartedOpen"
-            @click="isNotStartedOpen = !isNotStartedOpen"
-        />
-        Не запущены ({{ notStartedMiners.length }})
-      </h3>
-
-
-      <ul v-show="isNotStartedOpen">
-        <li v-for="[id, miner] in notStartedMiners" :key="id">
-          <Miner :miner="miner" :miner-id="Number(id)"/>
-        </li>
-      </ul>
-    </div>
-
-    <div v-if="workingMiners.length">
-      <h3 class="section-title">
-        <CollapseToggle
-            :is-open="isWorkingOpen"
-            @click="isWorkingOpen = !isWorkingOpen"
-        />
-        Работают ({{ workingMiners.length }})
-      </h3>
+      <div v-if="notStartedMiners.length">
+        <h3 class="section-title">
+          <CollapseToggle
+              :is-open="isNotStartedOpen"
+              @click="isNotStartedOpen = !isNotStartedOpen"
+          />
+          Не запущены ({{ notStartedMiners.length }})
+        </h3>
 
 
-      <ul v-show="isWorkingOpen">
-        <li v-for="[id, miner] in workingMiners" :key="id">
-          <Miner :miner="miner" :miner-id="Number(id)"/>
-        </li>
-      </ul>
-    </div>
+        <ul v-show="isNotStartedOpen">
+          <li v-for="[id, miner] in notStartedMiners" :key="id">
+            <Miner :miner="miner" :miner-id="Number(id)"/>
+          </li>
+        </ul>
+      </div>
 
-    <div v-if="exhaustedMiners.length">
-      <h3 class="section-title">
-        <CollapseToggle
-            :is-open="isExhaustedOpen"
-            @click="isExhaustedOpen = !isExhaustedOpen"
-        />
-        Без энергии ({{ exhaustedMiners.length }})
-      </h3>
+      <div v-if="workingMiners.length">
+        <h3 class="section-title">
+          <CollapseToggle
+              :is-open="isWorkingOpen"
+              @click="isWorkingOpen = !isWorkingOpen"
+          />
+          Работают ({{ workingMiners.length }})
+        </h3>
 
 
-      <ul v-show="isExhaustedOpen">
-        <li v-for="[id, miner] in exhaustedMiners" :key="id">
-          <Miner :miner="miner" :miner-id="Number(id)"/>
-        </li>
-      </ul>
+        <ul v-show="isWorkingOpen">
+          <li v-for="[id, miner] in workingMiners" :key="id">
+            <Miner :miner="miner" :miner-id="Number(id)"/>
+          </li>
+        </ul>
+      </div>
+
+      <div v-if="exhaustedMiners.length">
+        <h3 class="section-title">
+          <CollapseToggle
+              :is-open="isExhaustedOpen"
+              @click="isExhaustedOpen = !isExhaustedOpen"
+          />
+          Без энергии ({{ exhaustedMiners.length }})
+        </h3>
+
+
+        <ul v-show="isExhaustedOpen">
+          <li v-for="[id, miner] in exhaustedMiners" :key="id">
+            <Miner :miner="miner" :miner-id="Number(id)"/>
+          </li>
+        </ul>
+      </div>
     </div>
   </div>
 </template>
@@ -173,6 +182,13 @@ li {
   margin-bottom: 12px;
   border: 1px solid #ccc;
   border-radius: 6px;
+}
+
+.miners-title {
+  display: flex;
+  align-items: center;
+  user-select: none;
+  margin-bottom: 12px;
 }
 
 </style>
