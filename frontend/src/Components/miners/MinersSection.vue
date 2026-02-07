@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import {ref, computed} from "vue"
-import type { MinerInfo } from "../entities"
-import Miner from "../Miner.vue"
-import CollapseToggle from "./UI/CollapseToggle.vue"
+import type { MinerInfo } from "../../entities.ts"
+import Miner from "./Miner.vue"
+import CollapseToggle from "../UI/CollapseToggle.vue"
 
 const props = defineProps<{
   title: string

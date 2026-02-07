@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import MyButton from "./Components/UI/MyButton.vue";
-import type {MinerInfo} from "./entities.ts";
+import MyButton from "../UI/MyButton.vue";
+import type {MinerInfo} from "../../entities.ts";
 import axios from "axios";
 
 const props = defineProps<{

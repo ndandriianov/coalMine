@@ -2,9 +2,9 @@
 import {ref, onMounted, onUnmounted, computed} from "vue"
 import axios from "axios"
 
-import type { MinerInfo } from "../entities"
-import MyButton from "./UI/MyButton.vue"
-import CollapseToggle from "./UI/CollapseToggle.vue"
+import type { MinerInfo } from "../../entities.ts"
+import MyButton from "../UI/MyButton.vue"
+import CollapseToggle from "../UI/CollapseToggle.vue"
 import MinersSection from "./MinersSection.vue"
 
 type MinersResponse = Record<number, MinerInfo>
