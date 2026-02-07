@@ -5,6 +5,7 @@ import axios from "axios"
 import type {MinerInfo} from "../entities.ts";
 import Miner from "../Miner.vue";
 import MyButton from "./UI/MyButton.vue";
+import CollapseToggle from "./UI/CollapseToggle.vue";
 
 
 type MinersResponse = Record<number, MinerInfo>
@@ -42,11 +43,34 @@ const hasNotStarted = computed(() => {
 async function runAllMiners() {
   try {
     await axios.post("http://localhost:9091/mine/miner/start")
-    fetchMiners() // обновляем состояние после запуска
+    await fetchMiners()
   } catch (e) {
     console.error("не удалось запустить всех майнеров", e)
   }
 }
+
+
+const notStartedMiners = computed(() =>
+    Object.entries(miners.value).filter(
+        ([_, miner]) => !miner.Started
+    )
+)
+
+const workingMiners = computed(() =>
+    Object.entries(miners.value).filter(
+        ([_, miner]) => miner.Started && miner.EnergyLeft > 0
+    )
+)
+
+const exhaustedMiners = computed(() =>
+    Object.entries(miners.value).filter(
+        ([_, miner]) => miner.EnergyLeft === 0
+    )
+)
+
+const isNotStartedOpen = ref(true)
+const isWorkingOpen = ref(true)
+const isExhaustedOpen = ref(true)
 
 
 // lifecycle
@@ -77,27 +101,68 @@ onUnmounted(() => {
       Запустить все
     </MyButton>
 
-    <div v-if="isLoading && Object.keys(miners).length === 0">
-      Загрузка...
+    <div v-if="notStartedMiners.length">
+      <h3 class="section-title">
+        <CollapseToggle
+            :is-open="isNotStartedOpen"
+            @click="isNotStartedOpen = !isNotStartedOpen"
+        />
+        Не запущены ({{ notStartedMiners.length }})
+      </h3>
+
+
+      <ul v-show="isNotStartedOpen">
+        <li v-for="[id, miner] in notStartedMiners" :key="id">
+          <Miner :miner="miner" :miner-id="Number(id)"/>
+        </li>
+      </ul>
     </div>
 
-    <div v-else-if="error">
-      {{ error }}
+    <div v-if="workingMiners.length">
+      <h3 class="section-title">
+        <CollapseToggle
+            :is-open="isWorkingOpen"
+            @click="isWorkingOpen = !isWorkingOpen"
+        />
+        Работают ({{ workingMiners.length }})
+      </h3>
+
+
+      <ul v-show="isWorkingOpen">
+        <li v-for="[id, miner] in workingMiners" :key="id">
+          <Miner :miner="miner" :miner-id="Number(id)"/>
+        </li>
+      </ul>
     </div>
 
-    <div v-else-if="Object.keys(miners).length === 0">
-      Майнеров нет
-    </div>
+    <div v-if="exhaustedMiners.length">
+      <h3 class="section-title">
+        <CollapseToggle
+            :is-open="isExhaustedOpen"
+            @click="isExhaustedOpen = !isExhaustedOpen"
+        />
+        Без энергии ({{ exhaustedMiners.length }})
+      </h3>
 
-    <ul v-else>
-      <li v-for="(miner, id) in miners" :key="id">
-        <Miner :miner="miner" :miner-id="Number(id)" :key="id"/>
-      </li>
-    </ul>
+
+      <ul v-show="isExhaustedOpen">
+        <li v-for="[id, miner] in exhaustedMiners" :key="id">
+          <Miner :miner="miner" :miner-id="Number(id)"/>
+        </li>
+      </ul>
+    </div>
   </div>
 </template>
 
+
 <style scoped>
+.section-title {
+  display: flex;
+  align-items: center;
+  user-select: none;
+  margin: 16px 0 8px;
+}
+
 ul {
   padding: 0;
 }
@@ -109,4 +174,5 @@ li {
   border: 1px solid #ccc;
   border-radius: 6px;
 }
+
 </style>
