@@ -221,6 +221,7 @@ func (s *Service) BuyEquipment(equipmentType equipment.Type) error {
 	case equipment.Pickaxe:
 		if s.Balance >= pickaxePrice && !s.pickaxe {
 			s.pickaxe = true
+			s.Balance -= pickaxePrice
 		} else if s.pickaxe {
 			return errors.ErrEquipmentIsAlreadyBought
 		} else {
@@ -230,6 +231,7 @@ func (s *Service) BuyEquipment(equipmentType equipment.Type) error {
 	case equipment.Ventilation:
 		if s.Balance >= ventilationPrice && !s.ventilation {
 			s.ventilation = true
+			s.Balance -= ventilationPrice
 		} else if s.ventilation {
 			return errors.ErrEquipmentIsAlreadyBought
 		} else {
@@ -239,6 +241,7 @@ func (s *Service) BuyEquipment(equipmentType equipment.Type) error {
 	case equipment.Minecarts:
 		if s.Balance >= minecartsPrice && !s.minecarts {
 			s.minecarts = true
+			s.Balance -= minecartsPrice
 		} else if s.minecarts {
 			return errors.ErrEquipmentIsAlreadyBought
 		} else {
