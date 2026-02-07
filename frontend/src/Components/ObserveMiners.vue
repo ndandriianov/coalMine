@@ -74,6 +74,41 @@ const isWorkingOpen = ref(true)
 const isExhaustedOpen = ref(true)
 
 
+function countByType(
+    miners: Array<[string, MinerInfo]>
+) {
+  return miners.reduce(
+      (acc, [_, miner]) => {
+        acc[miner.Type] = (acc[miner.Type] ?? 0) + 1
+        return acc
+      },
+      {} as Record<string, number>
+  )
+}
+
+const notStartedCounts = computed(() =>
+    countByType(notStartedMiners.value)
+)
+
+const workingCounts = computed(() =>
+    countByType(workingMiners.value)
+)
+
+const exhaustedCounts = computed(() =>
+    countByType(exhaustedMiners.value)
+)
+
+function formatCounts(counts: Record<string, number>) {
+  const parts: string[] = []
+
+  if (counts.small) parts.push(`small: ${counts.small}`)
+  if (counts.middle) parts.push(`middle: ${counts.middle}`)
+  if (counts.strong) parts.push(`strong: ${counts.strong}`)
+
+  return parts.join(", ")
+}
+
+
 // lifecycle
 onMounted(() => {
   fetchMiners();
@@ -116,6 +151,10 @@ onUnmounted(() => {
               @click="isNotStartedOpen = !isNotStartedOpen"
           />
           Не запущены ({{ notStartedMiners.length }})
+
+          <span v-if="!isNotStartedOpen" class="section-counts">
+            — {{ formatCounts(notStartedCounts) }}
+          </span>
         </h3>
 
 
@@ -133,6 +172,10 @@ onUnmounted(() => {
               @click="isWorkingOpen = !isWorkingOpen"
           />
           Работают ({{ workingMiners.length }})
+
+          <span v-if="!isWorkingOpen" class="section-counts">
+            — {{ formatCounts(workingCounts) }}
+          </span>
         </h3>
 
 
@@ -150,6 +193,10 @@ onUnmounted(() => {
               @click="isExhaustedOpen = !isExhaustedOpen"
           />
           Без энергии ({{ exhaustedMiners.length }})
+
+          <span v-if="!isExhaustedOpen" class="section-counts">
+            — {{ formatCounts(exhaustedCounts) }}
+          </span>
         </h3>
 
 
@@ -189,6 +236,12 @@ li {
   align-items: center;
   user-select: none;
   margin-bottom: 12px;
+}
+
+.section-counts {
+  font-size: 0.9em;
+  color: #666;
+  margin-left: 6px;
 }
 
 </style>
