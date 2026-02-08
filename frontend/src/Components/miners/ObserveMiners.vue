@@ -61,7 +61,7 @@ onUnmounted(() => {
     <header class="miners-main-header">
       <div class="title-wrapper" @click="isMinersOpen = !isMinersOpen">
         <CollapseToggle :is-open="isMinersOpen" />
-        <h2 class="miners-title">Майнеры</h2>
+        <h2 class="miners-title">Шахтеры</h2>
       </div>
 
       <transition name="fade">
