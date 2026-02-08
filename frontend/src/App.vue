@@ -4,6 +4,7 @@ import Balance from "./Components/Balance.vue";
 import ObserveMiners from "./Components/miners/ObserveMiners.vue";
 import Equipment from "./Components/Equipment.vue";
 import ControlPanel from "./Components/ControlPanel.vue";
+import MinerTypeInfo from "./Components/MinerTypeInfo.vue";
 
 </script>
 
@@ -21,6 +22,12 @@ import ControlPanel from "./Components/ControlPanel.vue";
       <div class="content-body">
         <ObserveMiners />
         <Equipment />
+      </div>
+
+      <div class="info-row">
+        <MinerTypeInfo type="small" />
+        <MinerTypeInfo type="middle" />
+        <MinerTypeInfo type="strong" />
       </div>
     </div>
   </div>
