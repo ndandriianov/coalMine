@@ -30,50 +30,117 @@ function formatCounts(counts: Record<string, number>) {
 </script>
 
 <template>
-  <div v-if="miners.length">
-    <h3 class="section-title">
-      <CollapseToggle
-          :is-open="isOpen"
-          @click="isOpen = !isOpen"
-      />
-      {{ title }} ({{ miners.length }})
+  <div v-if="miners.length" class="miners-section">
+    <header class="section-header" @click="isOpen = !isOpen">
+      <div class="title-group">
+        <CollapseToggle :is-open="isOpen" />
+        <h3 class="section-title">
+          {{ title }}
+          <span class="count-badge">{{ miners.length }}</span>
+        </h3>
+      </div>
 
-      <span v-if="!isOpen" class="section-counts">
-        — {{ formatCounts(counts) }}
-      </span>
-    </h3>
+      <transition name="fade">
+        <span v-if="!isOpen" class="section-counts">
+          {{ formatCounts(counts) }}
+        </span>
+      </transition>
+    </header>
 
-    <ul v-show="isOpen">
-      <li v-for="[id, miner] in miners" :key="id">
-        <Miner :miner="miner" :miner-id="Number(id)" />
-      </li>
-    </ul>
+    <transition name="expand">
+      <ul v-show="isOpen" class="miners-grid">
+        <li v-for="[id, miner] in miners" :key="id" class="miner-item">
+          <Miner :miner="miner" :miner-id="Number(id)" />
+        </li>
+      </ul>
+    </transition>
   </div>
 </template>
 
 <style scoped>
-.section-title {
+.miners-section {
+  margin-bottom: 32px;
+  font-family: 'Inter', -apple-system, sans-serif;
+}
+
+.section-header {
   display: flex;
   align-items: center;
+  justify-content: flex-start;
+  gap: 16px;
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: 8px;
+  transition: background 0.2s;
   user-select: none;
-  margin: 16px 0 8px;
 }
 
-ul {
-  padding: 0;
+.section-header:hover {
+  background: rgba(255, 255, 255, 0.05);
 }
 
-li {
-  list-style: none;
-  padding: 12px;
-  margin-bottom: 12px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
+.title-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.section-title {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #333;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.count-badge {
+  font-size: 0.8rem;
+  background: #333;
+  color: #888;
+  padding: 2px 8px;
+  border-radius: 12px;
 }
 
 .section-counts {
-  font-size: 0.9em;
-  color: #666;
-  margin-left: 6px;
+  font-size: 0.85rem;
+  color: #888;
+  letter-spacing: 0.5px;
+  border-left: 2px solid #444;
+  padding-left: 12px;
+}
+
+.miners-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 20px;
+  padding: 16px 0;
+  margin: 0;
+  list-style: none;
+}
+
+.miner-item {
+  display: flex;
+  justify-content: center;
+}
+
+/* Анимации */
+.fade-enter-active, .fade-leave-active {
+  transition: opacity 0.3s;
+}
+.fade-enter-from, .fade-leave-to {
+  opacity: 0;
+}
+
+.expand-enter-active, .expand-leave-active {
+  transition: all 0.3s ease-out;
+  max-height: 2000px;
+  overflow: hidden;
+}
+.expand-enter-from, .expand-leave-to {
+  max-height: 0;
+  opacity: 0;
+  transform: translateY(-10px);
 }
 </style>
