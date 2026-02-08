@@ -89,7 +89,7 @@ function formatCounts(counts: Record<string, number>) {
   margin: 0;
   font-size: 1.2rem;
   font-weight: 600;
-  color: #333;
+  color: #888;
   display: flex;
   align-items: center;
   gap: 8px;

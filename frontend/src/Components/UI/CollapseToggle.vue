@@ -26,5 +26,6 @@ defineProps<{
   display: inline-block;
   width: 14px;
   text-align: center;
+  color: #1a4185;
 }
 </style>
