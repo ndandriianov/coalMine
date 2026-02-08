@@ -9,6 +9,7 @@ import (
 	"coalMine/mine/resources"
 	"context"
 	"fmt"
+	"strings"
 	"sync"
 	"sync/atomic"
 )
@@ -263,4 +264,17 @@ func (s *Service) GetEquipment() equipment.EquipmentInfo {
 	}
 
 	return info
+}
+
+func (s *Service) GetTypeInfo(minerType string) (miners.TypeInfo, error) {
+	switch strings.ToLower(minerType) {
+	case "small":
+		return miners.NewSmallMinerTypeInfo(), nil
+	case "middle":
+		return miners.NewMiddleMinerTypeInfo(), nil
+	case "strong":
+		return miners.NewStrongMinerTypeInfo(), nil
+	default:
+		return miners.TypeInfo{}, errors.ErrInvalidMinerType
+	}
 }

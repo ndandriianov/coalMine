@@ -167,3 +167,20 @@ func (h *Handlers) HandleGetEquipment(w http.ResponseWriter, r *http.Request) {
 		logHttpWriteFailure()
 	}
 }
+
+func (h *Handlers) HandleGetTypeInfo(w http.ResponseWriter, r *http.Request) {
+	minerType := r.URL.Query().Get("type")
+	info, err := h.mine.GetTypeInfo(minerType)
+	if err != nil {
+		if errors.Is(err, mineErrors.ErrInvalidMinerType) {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+
+	err = json.NewEncoder(w).Encode(info)
+	if err != nil {
+		logHttpWriteFailure()
+	}
+}

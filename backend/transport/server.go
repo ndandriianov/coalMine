@@ -29,6 +29,7 @@ func (s *Server) Serve() error {
 	router.Path("/mine/balance").Methods("GET").HandlerFunc(s.handlers.HandleGetBalance)
 	router.Path("/mine/miner").Methods("GET").HandlerFunc(s.handlers.HandleGetMiners)
 	router.Path("/mine/equipment").Methods("GET").HandlerFunc(s.handlers.HandleGetEquipment)
+	router.Path("/mine/miner/info").Methods("GET").HandlerFunc(s.handlers.HandleGetTypeInfo)
 
 	// methods that don't work if not started
 	protected := router.NewRoute().Subrouter()
