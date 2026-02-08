@@ -2,7 +2,7 @@
 import {ref, onMounted, onUnmounted, computed, watch} from "vue"
 import axios from "axios"
 
-import type {EquipmentInfo} from "../entities.ts";
+import {type EquipmentInfo, EquipmentLabels, EquipmentType} from "../entities.ts";
 import MyButton from "./UI/MyButton.vue";
 
 
@@ -62,6 +62,12 @@ async function restartTheGame() {
 }
 
 
+const getLabel = (name: string | number) => {
+  const id = EquipmentType[name as keyof typeof EquipmentType];
+  return EquipmentLabels[id as EquipmentType] || name;
+}
+
+
 // lifecycle
 onMounted(() => {
   fetchEquipment();
@@ -94,7 +100,7 @@ onUnmounted(() => {
           :class="{ 'is-owned': isBought }"
       >
         <div class="card-header">
-          <span class="equipment-name">{{ name }}</span>
+          <span class="equipment-name">{{ getLabel(name) }}</span>
           <div class="indicator" :class="{ 'active': isBought }"></div>
         </div>
 

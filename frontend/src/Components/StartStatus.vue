@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import {ref, onMounted, onUnmounted} from "vue";
 import axios from "axios";
+import MyButton from "./UI/MyButton.vue";
 
 interface StartedResponse {
   Started: boolean;
