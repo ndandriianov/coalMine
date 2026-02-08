@@ -56,23 +56,20 @@ onUnmounted(() => {
 <template>
   <div class="pause-panel">
     <div class="status">
-    <span
-        class="dot"
-        :class="{ paused: isGameOnPause }"
-    />
-      <span>
-      {{ isGameOnPause ? "Игра на паузе" : "Игра идёт" }}
-    </span>
+      <span class="dot" :class="{ paused: isGameOnPause }" />
+      <span class="status-text">
+        {{ isGameOnPause ? "ПАУЗА" : "В ПРОЦЕССЕ" }}
+      </span>
     </div>
 
     <button
-        class="pause-button"
+        class="action-button"
+        :class="{ 'resume-mode': isGameOnPause }"
         @click="isGameOnPause ? resume() : pause()"
     >
-      {{ isGameOnPause ? "Продолжить" : "Поставить на паузу" }}
+      {{ isGameOnPause ? "Продолжить" : "Пауза" }}
     </button>
   </div>
-
 </template>
 
 <style scoped>
@@ -80,35 +77,54 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   gap: 16px;
-  padding: 12px 16px;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  width: fit-content;
 }
 
 .status {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-weight: 500;
+  gap: 10px;
+}
+
+.status-text {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: #888;
 }
 
 .dot {
-  width: 10px;
-  height: 10px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
-  background: green;
+  background: #4caf50;
+  box-shadow: 0 0 10px #4caf50;
+  transition: all 0.3s ease;
 }
 
 .dot.paused {
-  background: orange;
+  background: #ff9800;
+  box-shadow: 0 0 10px #ff9800;
 }
 
-.pause-button {
-  padding: 6px 12px;
-  border-radius: 6px;
-  border: none;
+.action-button {
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1px solid #444;
+  background: transparent;
+  color: #eee;
+  font-size: 13px;
+  font-weight: 600;
   cursor: pointer;
+  transition: all 0.2s;
 }
 
+.action-button:hover {
+  background: #333;
+  border-color: #666;
+}
+
+.action-button.resume-mode {
+  border-color: #ff9800;
+  color: #ff9800;
+}
 </style>
