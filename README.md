@@ -33,3 +33,5 @@ docker compose up --build
 ```bash
 docker compose down
 ```
+<img width="1710" height="1107" alt="Screenshot 2026-03-10 at 9 46 20 PM" src="https://github.com/user-attachments/assets/633a000f-f897-402e-9d41-31fdcac2a412" />
+
