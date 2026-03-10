@@ -94,23 +94,26 @@ onUnmounted(() => {
 
     <div v-else class="equipment-grid">
       <div
-          v-for="(isBought, name) in equipment"
+          v-for="(item, name) in equipment"
           :key="name"
           class="equipment-card"
-          :class="{ 'is-owned': isBought }"
+          :class="{ 'is-owned': item.IsBought }"
       >
         <div class="card-header">
           <span class="equipment-name">{{ getLabel(name) }}</span>
-          <div class="indicator" :class="{ 'active': isBought }"></div>
+          <div class="price-indicator">
+            <div>{{item.Price}}</div>
+            <div class="indicator" :class="{ 'active': item.IsBought }"></div>
+          </div>
         </div>
 
         <div class="card-body">
-          <span class="status-badge" :class="isBought ? 'owned' : 'missing'">
-            {{ isBought ? "В наличии" : "Отсутствует" }}
+          <span class="status-badge" :class="item.IsBought ? 'owned' : 'missing'">
+            {{ item.IsBought ? "В наличии" : "Отсутствует" }}
           </span>
 
           <MyButton
-              v-if="!isBought"
+              v-if="!item.IsBought"
               @click.prevent="() => buyEquipment(name as string)"
               class="buy-button"
           >
@@ -285,5 +288,13 @@ onUnmounted(() => {
   padding: 12px;
   border-radius: 8px;
   border: 1px solid rgba(255, 82, 82, 0.3);
+}
+
+.price-indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #aaa;
 }
 </style>

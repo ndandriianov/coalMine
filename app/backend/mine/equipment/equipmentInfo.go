@@ -1,7 +1,12 @@
 package equipment
 
 type EquipmentInfo struct {
-	Pickaxe     bool
-	Ventilation bool
-	Minecarts   bool
+	Pickaxe     EquipmentItem
+	Ventilation EquipmentItem
+	Minecarts   EquipmentItem
+}
+
+type EquipmentItem struct {
+	IsBought bool
+	Price    int
 }

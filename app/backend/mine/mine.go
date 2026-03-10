@@ -258,9 +258,19 @@ func (s *Service) GetEquipment() equipment.EquipmentInfo {
 	defer s.equipmentMtx.Unlock()
 
 	info := equipment.EquipmentInfo{
-		Pickaxe:     s.pickaxe,
-		Ventilation: s.ventilation,
-		Minecarts:   s.minecarts,
+		Pickaxe: equipment.EquipmentItem{
+			IsBought: s.pickaxe,
+			Price:    3000,
+		},
+		Ventilation: equipment.EquipmentItem{
+			IsBought: s.ventilation,
+			Price:    15000,
+		},
+
+		Minecarts: equipment.EquipmentItem{
+			IsBought: s.minecarts,
+			Price:    50000,
+		},
 	}
 
 	return info

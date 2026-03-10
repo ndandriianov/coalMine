@@ -8,9 +8,14 @@ export interface MinerInfo {
 }
 
 export interface EquipmentInfo {
-  Pickaxe: boolean
-  Ventilation: boolean
-  Minecarts: boolean
+  Pickaxe: EquipmentItem
+  Ventilation: EquipmentItem
+  Minecarts: EquipmentItem
+}
+
+export interface EquipmentItem {
+  IsBought: boolean
+  Price: number
 }
 
 export const EquipmentType = {
